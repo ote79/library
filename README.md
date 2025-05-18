@@ -1,1 +1,9 @@
-# library
+![image](https://github.com/user-attachments/assets/8a120328-8fdd-4d93-8745-367b4ed3b1d8)# library
+目前实现的功能有：
+登录系统（根据uid识别并赋予用户权限（目前分为管理员和普通用户），支持账户（uid）和昵称（name）登录，切换账户）
+业务系统（借书，还书，查询图书信息，查询所有图书信息（管理员），搜索图书（Bid/BookName），修改密码（管理员），删除/添加/修改图书信息（管理员），查询自身借阅列表，查询所有用户详细信息（管理员），添加/删除用户（管理员），查看所有借阅详细信息（管理员））
+
+本项目的项目管理工具为Maven，使用的依赖为lombok，mybatis，junit，mysql，。
+
+
+![1747553965317](https://github.com/user-attachments/assets/35889bc1-28ca-458e-9603-ee5a8d084f95)
