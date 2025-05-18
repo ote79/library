@@ -5,6 +5,7 @@ import com.main.entity.User;
 import com.main.mapper.BookManage;
 
 import com.main.tool.AccountChaker;
+import com.main.tool.Administrator;
 import com.main.tool.Common;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
@@ -28,6 +29,6 @@ public class ATest {
 
     @RepeatedTest(1)
     public void test01() {
-        Common.borrowBook(2,2);
+        Administrator.selectAllBooks();
     }
 }
