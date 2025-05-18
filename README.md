@@ -8,7 +8,9 @@
 
 于com.main.Main.java启动项目
 
-本项目的项目管理工具为Maven，使用的依赖为lombok，mybatis，junit，mysql，。
+本项目的项目管理工具为Maven，使用的依赖为lombok，mybatis，junit，mysql。
 
 数据库结构如下
 ![1747553965317](https://github.com/user-attachments/assets/35889bc1-28ca-458e-9603-ee5a8d084f95)
+
+联系邮箱：ote79ote@163.com
