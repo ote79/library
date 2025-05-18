@@ -14,3 +14,5 @@
 ![1747553965317](https://github.com/user-attachments/assets/35889bc1-28ca-458e-9603-ee5a8d084f95)
 
 联系邮箱：ote79ote@163.com
+
+未适配前端，适配了会更新
