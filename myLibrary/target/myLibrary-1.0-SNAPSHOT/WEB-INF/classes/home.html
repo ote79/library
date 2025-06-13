@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4B5563',
+                        secondary: '#9CA3AF',
+                        neutral: '#F3F4F6',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+            .btn-hover {
+                transition: all 0.3s ease;
+            }
+            .btn-hover:hover {
+                transform: translateY(-2px);
+            }
+            .btn-active {
+                transition: all 0.2s ease;
+            }
+            .btn-active:active {
+                transform: translateY(1px);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen font-inter flex flex-col items-center justify-center p-4 md:p-8">
+<!-- 导航栏 -->
+<header class="bg-white rounded-xl shadow-lg p-6 md:p-8 w-full max-w-6xl mb-8">
+    <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa fa-book text-2xl text-primary"></i>
+            <h1 class="text-xl font-bold text-primary">图书管理系统</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="userMenuBtn" class="flex items-center space-x-1">
+                <i class="fa fa-user-circle text-xl text-primary"></i>
+                <span class="hidden md:inline" th:text="${user.name}">用户</span>
+                <span class="hidden md:inline" th:text="${user.uid}" id="uid">用户</span>
+            </button>
+            <button id="logoutBtn" class="hidden md:flex items-center space-x-1">
+                <i class="fa fa-sign-out-alt text-primary"></i>
+                <span class="text-primary">退出</span>
+            </button>
+            <button id="mobileMenuBtn" class="md:hidden text-xl text-primary">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </div>
+    <div class="hidden md:flex items-center space-x-6 mt-4">
+        <a href="#" class="hover:text-primary transition-colors font-medium" id="home">首页</a>
+        <a href="#" class="hover:text-primary transition-colors font-medium" id="selectHome">图书查询</a>
+        <a href="#" class="hover:text-primary transition-colors font-medium" id="readManage">借阅管理</a>
+        <a href="#" class="hover:text-primary transition-colors font-medium" id="aboutUs">关于我们</a>
+    </div>
+</header>
+
+<!-- 移动端菜单 -->
+<div id="mobileMenu" class="md:hidden bg-white shadow-lg absolute w-full z-10 hidden">
+    <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+        <a href="#" class="py-2 hover:text-primary transition-colors font-medium">首页</a>
+        <a href="#" class="py-2 hover:text-primary transition-colors font-medium">图书查询</a>
+        <a href="#" class="py-2 hover:text-primary transition-colors font-medium">借阅管理</a>
+        <a href="#" class="py-2 hover:text-primary transition-colors font-medium">关于我们</a>
+        <hr class="border-gray-200">
+        <button id="mobileLogoutBtn" class="flex items-center space-x-1 py-2 text-primary font-medium">
+            <i class="fa fa-sign-out-alt"></i>
+            <span>退出登录</span>
+        </button>
+    </div>
+</div>
+
+<!-- 主内容区 -->
+<main class="w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+    <!-- 操作按钮区 -->
+    <div class="mb-6 flex flex-wrap gap-3 justify-start">
+        <button id="queryAllBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-book mr-2"></i>刷新可借图书
+        </button>
+        <button id="queryByIdBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-search mr-2"></i>按ID查询
+        </button>
+        <button id="addBookBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-plus mr-2"></i>添加图书
+        </button>
+        <button id="deleteBookBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-trash mr-2"></i>删除图书
+        </button>
+        <button id="updateBookBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-edit mr-2"></i>修改图书
+        </button>
+        <!-- 我的借阅图书按钮 -->
+        <button id="myBorrowedBooksBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-book-reader mr-2"></i>我的借阅图书
+        </button>
+        <button id="selectAllBooks" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-5 rounded-lg transition-all duration-200 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center">
+            <i class="fa fa-book-reader mr-2"></i>图书总览
+        </button>
+    </div>
+
+    <!-- 搜索框 - 居中显示 -->
+    <div class="mb-8">
+        <div class="relative max-w-2xl mx-auto">
+            <input type="text" id="searchInput" placeholder="搜索图书标题、作者"
+                   class="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-lg">
+            <button id="searchBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                <i class="fa fa-search text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 结果展示区 -->
+    <div id="resultArea" class="min-h-[500px] bg-white rounded-xl shadow-sm p-6">
+        <div class="flex flex-col items-center justify-center h-full">
+            <i class="fa fa-book text-6xl text-gray-300 mb-4"></i>
+            <h2 class="text-2xl font-medium text-gray-500 mb-2">欢迎使用图书管理系统</h2>
+            <p class="text-gray-400 text-lg">请从上方选择操作</p>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="text-center text-gray-500 text-sm mt-8">
+    &copy; 2023 图书管理系统 | 版权所有
+</footer>
+
+<!-- 模态框 -->
+<div id="modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto m-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalTitle" class="text-xl font-bold">模态框标题</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="mb-6">
+                <!-- 模态框内容将在这里动态加载 -->
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelModalBtn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    取消
+                </button>
+                <button id="confirmModalBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                    确认
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 加载指示器 -->
+<div id="loadingIndicator" class="fixed inset-0 bg-black/20 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mr-4"></div>
+        <span class="text-lg font-medium text-primary">处理中，请稍候...</span>
+    </div>
+</div>
+
+<script defer>
+    // 移动端菜单切换
+    document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // 模态框控制
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const confirmModalBtn = document.getElementById('confirmModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    function openModal(title, content, confirmCallback) {
+        modalTitle.textContent = title;
+        modalContent.innerHTML = content;
+        modal.classList.remove('hidden');
+
+        if (confirmCallback) {
+            confirmModalBtn.onclick = confirmCallback;
+        } else {
+            confirmModalBtn.onclick = closeModal;
+        }
+
+        // 为模态框内按 ID 查询的输入框添加回车键监听
+        const bookIdInput = modalContent.querySelector('#bookIdInput');
+        if (bookIdInput) {
+            bookIdInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    if (confirmCallback) {
+                        confirmCallback();
+                    }
+                }
+            });
+        }
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+
+    closeModalBtn.onclick = closeModal;
+    cancelModalBtn.onclick = closeModal;
+
+    // 显示加载指示器
+    function showLoading() {
+        loadingIndicator.classList.remove('hidden');
+    }
+
+    // 隐藏加载指示器
+    function hideLoading() {
+        loadingIndicator.classList.add('hidden');
+    }
+
+    // 退出登录
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        openModal(
+            '确认退出',
+            `
+                    <p>您确定要退出登录吗？</p>
+                    <div class="flex items-center">
+                        <input id="clearLoginTrace" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/50">
+                        <label for="clearLoginTrace" class="ml-2 block text-sm text-gray-600">是否清除登录痕迹</label>
+                    </div>
+                `,
+            function() {
+                alert('已退出登录');
+                const clearTrace = document.getElementById('clearLoginTrace').checked;
+                if (clearTrace) {
+                    localStorage.removeItem('savedUsername');
+                    localStorage.removeItem('savedPassword');
+                }
+                // 重定向到登录页面
+                window.location.href = 'index';
+                closeModal();
+            }
+        );
+    });
+
+    document.getElementById('mobileLogoutBtn').addEventListener('click', function() {
+        document.getElementById('mobileMenu').classList.add('hidden');
+        document.getElementById('logoutBtn').click();
+    });
+
+    // 显示图书列表
+    function displayBooks(booksToDisplay) {
+        const resultArea = document.getElementById('resultArea');
+        resultArea.innerHTML = '';
+
+        if (booksToDisplay.length === 0) {
+            resultArea.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <i class="fa fa-search text-6xl text-gray-300 mb-4"></i>
+                        <h2 class="text-2xl font-medium text-gray-500 mb-2">未找到图书</h2>
+                        <p class="text-gray-400 text-lg">请尝试其他搜索条件</p>
+                    </div>
+                `;
+            return;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'w-full border-collapse';
+        table.innerHTML = `
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">ID</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">书名</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">作者</th>
+
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">状态</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTableBody"></tbody>
+            `;
+        resultArea.appendChild(table);
+
+        const tbody = document.getElementById('booksTableBody');
+        booksToDisplay.forEach(book => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors';
+            row.innerHTML = `
+                    <td class="py-3 px-4 border-b">${book.bid}</td>
+                    <td class="py-3 px-4 border-b">${book.bookName}</td>
+                    <td class="py-3 px-4 border-b">${book.author}</td>
+
+                    <td class="py-3 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs ${book.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${book.available ? '可借阅' : '已借出'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 border-b">
+                        <button class="view-book-btn text-primary hover:text-primary/80 mr-2" data-id="${book.bid}">
+                            <i class="fa fa-eye"></i> 查看
+                        </button>
+                        ${book.available ?
+                `<button class="borrow-book-btn text-green-600 hover:text-green-800" data-id="${book.bid}">
+                                <i class="fa fa-book"></i> 借阅
+                            </button>` :
+                `<button class="return-book-btn text-red-600 hover:text-red-800" data-id="${book.bid}">
+                                <i class="fa fa-reply"></i> 归还
+                            </button>`
+            }
+                    </td>
+                `;
+            tbody.appendChild(row);
+        });
+
+        // 为查看按钮添加事件监听
+        document.querySelectorAll('.view-book-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookId = parseInt(this.getAttribute('data-id'));
+                showLoading();
+
+                fetch('book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `action=get&id=${bookId}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+
+                        if (data.message) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        openModal(
+                            '图书详情',
+                            `
+                                <div class="space-y-4">
+                                    <div class="flex items-center">
+                                        <span class="font-medium w-24">ID:</span>
+                                        <span>${data.bid}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="font-medium w-24">书名:</span>
+                                        <span>${data.bookName}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="font-medium w-24">作者:</span>
+                                        <span>${data.author}</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                        <span class="font-medium w-24">状态:</span>
+                                        <span class="px-2 py-1 rounded-full text-xs ${data.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                            ${data.available ? '可借阅' : '已借出'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `
+                        );
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('获取图书详情失败，请重试'+bookId);
+                    });
+            });
+        });
+
+        // 为借阅按钮添加事件监听
+        document.querySelectorAll('.borrow-book-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookId = parseInt(this.getAttribute('data-id'));
+
+                // 获取用户ID
+                const userId = parseInt(document.getElementById('uid').textContent);
+                if (isNaN(userId) || userId <= 0) {
+                    alert('请先登录');
+                    return;
+                }
+
+                openModal(
+                    '确认借阅',
+                    `
+                            <p>您确定要借阅这本书吗？</p>
+                            <p class="text-sm text-gray-500 mt-2">借阅期限为30天</p>
+                        `,
+                    function() {
+                        showLoading();
+
+                        fetch('book', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `action=borrow&bookId=${bookId}&userId=${userId}`
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                hideLoading();
+
+                                if (data.message) {
+                                    alert(data.message);
+                                    if (data.message.includes('success')) {
+                                        closeModal();
+                                        fetchUserBorrowedBooks()
+                                    }
+                                } else {
+                                    alert('借阅操作失败，请重试');
+                                }
+                            })
+                            .catch(error => {
+                                hideLoading();
+                                console.error('Error:', error);
+                                alert('借阅操作失败，请重试');
+                            });
+                    }
+                );
+            });
+        });
+
+        // 为归还按钮添加事件监听
+        document.querySelectorAll('.return-book-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookId = parseInt(this.getAttribute('data-id'));
+
+                // 获取用户ID
+                const userId = parseInt(document.getElementById('uid').textContent);
+                if (isNaN(userId) || userId <= 0) {
+                    alert('请先登录');
+                    return;
+                }
+
+                openModal(
+                    '确认归还',
+                    `
+                            <p>您确定要归还这本书吗？</p>
+                        `,
+                    function() {
+                        showLoading();
+
+                        fetch('book', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `action=return&bookId=${bookId}&userId=${userId}`
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                hideLoading();
+
+                                if (data.message) {
+                                    alert(data.message);
+                                    if (data.message.includes('success')) {
+                                        closeModal();
+                                        fetchUserBorrowedBooks();
+                                    }
+                                } else {
+                                    alert('归还操作失败，请重试');
+                                }
+                            })
+                            .catch(error => {
+                                hideLoading();
+                                console.error('Error:', error);
+                                alert('归还操作失败，请重试');
+                            });
+                    }
+                );
+            });
+        });
+    }
+
+    // 显示用户借阅的图书
+    function displayBorrowedBooks(borrowedBooks) {
+        const resultArea = document.getElementById('resultArea');
+        resultArea.innerHTML = '';
+
+        if (borrowedBooks.length === 0) {
+            resultArea.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full">
+                        <i class="fa fa-book text-6xl text-gray-300 mb-4"></i>
+                        <h2 class="text-2xl font-medium text-gray-500 mb-2">您没有借阅的图书</h2>
+                        <p class="text-gray-400 text-lg">请从可借阅图书中选择借阅</p>
+                    </div>
+                `;
+            return;
+        }
+
+
+
+        const table = document.createElement('table');
+        table.className = 'w-full border-collapse';
+        table.innerHTML = `
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">ID</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">书名</th>
+                        <th class="py-3 px-4 text-left font-medium text-gray-700 border-b">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowedBooksTableBody"></tbody>
+            `;
+        resultArea.appendChild(table);
+
+        const tbody = document.getElementById('borrowedBooksTableBody');
+        borrowedBooks.forEach(borrow => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors';
+            row.innerHTML = `
+                    <td class="py-3 px-4 border-b">${borrow.bid}</td>
+                    <td class="py-3 px-4 border-b">${borrow.bookName}</td>
+                    <td class="py-3 px-4 border-b">
+                        <button class="return-book-btn text-red-600 hover:text-red-800" data-id="${borrow.bid}">
+                            <i class="fa fa-reply"></i> 归还
+                        </button>
+                    </td>
+                `;
+            tbody.appendChild(row);
+        });
+
+        // 为归还按钮添加事件监听
+        document.querySelectorAll('.return-book-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookId = parseInt(this.getAttribute('data-id'));
+
+                // 获取用户ID
+                const userId = parseInt(document.getElementById('uid').textContent);
+                if (isNaN(userId) || userId <= 0) {
+                    alert('请先登录');
+                    return;
+                }
+
+                openModal(
+                    '确认归还',
+                    `
+                            <p>您确定要归还这本书吗？</p>
+                        `,
+                    function() {
+                        showLoading();
+
+                        fetch('book', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `action=return&bookId=${bookId}&userId=${userId}`
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                hideLoading();
+
+                                if (data.message) {
+                                    alert(data.message);
+                                    if (data.message.includes('成功')) {
+                                        closeModal();
+                                        fetchUserBorrowedBooks(); // 刷新借阅列表
+                                    }
+                                } else {
+                                    alert('归还操作失败，请重试');
+                                }
+                            })
+                            .catch(error => {
+                                hideLoading();
+                                console.error('Error:', error);
+                                alert('归还操作失败，请重试');
+                            });
+                    }
+                );
+            });
+        });
+    }
+
+    // 从服务器获取所有图书
+    function fetchBooks() {
+        showLoading();
+
+        fetch('book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'action=list'
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                displayBooks(data);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('获取图书列表失败，请重试');
+            });
+    }
+
+
+    function fetchCanBorrowBooks() {
+        const userId = parseInt(document.getElementById('uid').textContent);
+
+        showLoading();
+
+        fetch('book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `action=canBorrow&id=${userId}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                displayBooks(data);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('获取图书列表失败，请重试'+error);
+            });
+    }
+
+    // 获取用户借阅的图书
+    function fetchUserBorrowedBooks() {
+        // 获取用户ID
+        const userId = parseInt(document.getElementById('uid').textContent);
+        if (isNaN(userId) || userId <= 0) {
+            alert('请先登录');
+            return;
+        }
+
+        showLoading();
+
+        fetch('book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `action=userBorrowedBooks&userId=${userId}`
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                hideLoading();
+                displayBorrowedBooks(data);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('获取借阅列表失败，请重试'+error);
+            });
+    }
+
+    // 按ID查询图书
+    function queryBookById() {
+        openModal(
+            '按ID查询图书',
+            `
+                    <div class="space-y-4">
+                        <div>
+                            <label for="bookIdInput" class="block text-sm font-medium text-gray-700 mb-1">图书ID</label>
+                            <input type="number" id="bookIdInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                        </div>
+                    </div>
+                `,
+            function() {
+                const bookId = parseInt(document.getElementById('bookIdInput').value);
+                if (isNaN(bookId) || bookId <= 0) {
+                    alert('请输入有效的图书ID');
+                    return;
+                }
+
+                showLoading();
+                closeModal();
+
+
+                fetch('book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `action=get&id=${bookId}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+
+                        if (data.message) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        displayBooks([data]);
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('查询图书失败，请重试');
+                    });
+            }
+        );
+    }
+
+    // 添加图书
+    function addBook() {
+        openModal(
+            '添加图书',
+            `
+                    <div class="space-y-4">
+                        <div>
+                            <label for="addTitle" class="block text-sm font-medium text-gray-700 mb-1">书名</label>
+                            <input type="text" id="addTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                        </div>
+                        <div>
+                            <label for="addAuthor" class="block text-sm font-medium text-gray-700 mb-1">作者</label>
+                            <input type="text" id="addAuthor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                        </div>
+
+                    </div>
+                `,
+            function() {
+                const title = document.getElementById('addTitle').value.trim();
+                const author = document.getElementById('addAuthor').value.trim();
+
+
+                if (!title || !author ) {
+                    alert('请填写所有字段');
+                    return;
+                }
+
+                showLoading();
+                closeModal();
+
+                fetch('book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `action=add&title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+
+                        if (data.message) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        alert('图书添加成功！');
+                        closeModal();
+                        fetchBooks(); // 刷新图书列表
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('添加图书失败，请重试');
+                    });
+            }
+        );
+    }
+
+    // 删除图书
+    function deleteBook() {
+        openModal(
+            '删除图书',
+            `
+                    <div class="space-y-4">
+                        <div>
+                            <label for="deleteBookId" class="block text-sm font-medium text-gray-700 mb-1">图书ID</label>
+                            <input type="number" id="deleteBookId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                        </div>
+                        <div class="bg-red-50 border border-red-200 p-3 rounded-lg text-sm">
+                            <p class="text-red-700">警告：删除图书将无法恢复，且可能影响借阅记录。</p>
+                        </div>
+                    </div>
+                `,
+            function() {
+                const bookId = parseInt(document.getElementById('deleteBookId').value);
+                if (isNaN(bookId) || bookId <= 0) {
+                    alert('请输入有效的图书ID');
+                    return;
+                }
+
+                showLoading();
+
+                closeModal();
+                // 先获取图书信息用于确认
+                fetch('book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `action=get&id=${bookId}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+
+                        if (data.message) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        openModal(
+                            '确认删除',
+                            `
+                                <p>您确定要删除《${data.title}》吗？</p>
+                                <p class="text-sm text-gray-500 mt-2">此操作无法撤销。</p>
+                            `,
+                            function() {
+                                showLoading();
+
+                                fetch('book', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    },
+                                    body: `action=delete&id=${bookId}`
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        hideLoading();
+
+                                        if (data.message) {
+                                            alert(data.message);
+                                            if (data.message.includes('成功')) {
+                                                closeModal();
+                                                fetchBooks(); // 刷新图书列表
+                                            }
+                                        } else {
+                                            alert('删除图书失败，请重试');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        hideLoading();
+                                        console.error('Error:', error);
+                                        alert('删除图书失败，请重试');
+                                    });
+                            }
+                        );
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('获取图书信息失败，请重试');
+                    });
+            }
+        );
+    }
+
+    // 修改图书信息
+    function updateBook() {
+        openModal(
+            '修改图书信息',
+            `
+                    <div class="space-y-4">
+                        <div>
+                            <label for="updateBookId" class="block text-sm font-medium text-gray-700 mb-1">图书ID</label>
+                            <input type="number" id="updateBookId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                        </div>
+                    </div>
+                `,
+            function() {
+                const bookId = parseInt(document.getElementById('updateBookId').value);
+                if (isNaN(bookId) || bookId <= 0) {
+                    alert('请输入有效的图书ID');
+                    return;
+                }
+
+                showLoading();
+
+                // 先获取图书信息
+                fetch('book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `action=get&id=${bookId}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+
+                        if (data.message) {
+                            alert(data.message);
+                            return;
+                        }
+
+                        openModal(
+                            '修改图书信息',
+                            `
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="updateTitle" class="block text-sm font-medium text-gray-700 mb-1">书名</label>
+                                        <input type="text" id="updateTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none" value="${data.bookName}">
+                                    </div>
+                                    <div>
+                                        <label for="updateAuthor" class="block text-sm font-medium text-gray-700 mb-1">作者</label>
+                                        <input type="text" id="updateAuthor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none" value="${data.author}">
+                                    </div>
+
+                                </div>
+                            `,
+                            function() {
+                                const title = document.getElementById('updateTitle').value.trim();
+                                const author = document.getElementById('updateAuthor').value.trim();
+
+
+                                if (!title || !author) {
+                                    alert('请填写所有字段');
+                                    return;
+                                }
+
+                                showLoading();
+
+                                fetch('book', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    },
+                                    body: `action=update&id=${bookId}&title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        hideLoading();
+
+                                        if (data.message) {
+                                            alert(data.message);
+                                            return;
+                                        }
+
+                                        alert('图书信息更新成功！');
+                                        closeModal();
+                                        fetchBooks(); // 刷新图书列表
+                                    })
+                                    .catch(error => {
+                                        hideLoading();
+                                        console.error('Error:', error);
+                                        alert('更新图书信息失败，请重试');
+                                    });
+                            }
+                        );
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('获取图书信息失败，请重试');
+                    });
+            }
+        );
+    }
+
+    // 搜索图书
+    function searchBooks() {
+        const searchTerm = document.getElementById('searchInput').value.trim();
+        if (!searchTerm) {
+            alert('请输入搜索关键词');
+            return;
+        }
+
+        showLoading();
+
+        fetch('book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `action=search&keyword=${encodeURIComponent(searchTerm)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                displayBooks(data);
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                alert('搜索图书失败，请重试');
+            });
+    }
+
+    // 一堆按钮事件监听
+    document.getElementById('queryAllBtn').addEventListener('click', fetchCanBorrowBooks);
+
+    document.getElementById('selectAllBooks').addEventListener('click', fetchBooks);
+
+    document.getElementById('queryByIdBtn').addEventListener('click', queryBookById);
+
+    document.getElementById('addBookBtn').addEventListener('click', addBook);
+
+    document.getElementById('deleteBookBtn').addEventListener('click', deleteBook);
+
+    document.getElementById('updateBookBtn').addEventListener('click', updateBook);
+
+    document.getElementById('myBorrowedBooksBtn').addEventListener('click', fetchUserBorrowedBooks);
+
+    document.getElementById('searchBtn').addEventListener('click', searchBooks);
+
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchBooks();
+        }
+    });
+
+    document.getElementById('home').addEventListener('click', function(e) {
+        alert("这就是主页")
+    });
+
+    document.getElementById('selectHome').addEventListener('click', function(e) {
+        alert("这个按钮没有用")
+    });
+
+    document.getElementById('readManage').addEventListener('click', function(e) {
+        alert("这个按钮没有用")
+    });
+
+    document.getElementById('aboutUs').addEventListener('click', function(e) {
+        alert("Produced by OTE79 Email: ote79ote@163.com")
+    });
+    window.addEventListener('load', fetchCanBorrowBooks);
+
+</script>
+</body>
+</html>
