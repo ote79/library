@@ -6,11 +6,13 @@
 
 ![image](https://github.com/user-attachments/assets/4d056306-624c-4635-a853-caf9e17e6bf9)
 
-![image](https://github.com/user-attachments/assets/3e1652b5-3b8f-4880-a685-7084780c0cd7)
+
+![image](https://github.com/user-attachments/assets/c2ba460e-29b8-433a-80a3-7fcd4b24d3e5)
 
 ![image](https://github.com/user-attachments/assets/9dc1f9ea-1532-4b71-b1f5-dd724de809de)
 
-![image](https://github.com/user-attachments/assets/dcc33ed3-7466-4433-a77f-15c7e533bf56)
+
+![image](https://github.com/user-attachments/assets/7600ac51-b9fb-4a1e-bd43-69c9a7870e38)
 
 功能上相对于控制台版本有所阉割，本人尽力了
 
