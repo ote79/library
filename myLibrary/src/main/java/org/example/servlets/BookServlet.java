@@ -34,7 +34,7 @@ public class BookServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest 请求, HttpServletResponse response)
             throws ServletException, IOException {
         // 设置响应内容类型
         response.setContentType("application/json;charset=UTF-8");
@@ -205,7 +205,9 @@ public class BookServlet extends HttpServlet {
                         keyword = "%"+keyword+"%";
                         System.out.println(keyword);
                         List<Relationship> results = bookManage.searchBooksByBookName(keyword);
-
+                        for (Relationship relationship : results){
+                            relationship.setAvailable(relationship.getName() == null);
+                        }
                         // 将结果转换为JSON并返回
                         String jsonResponse = mapper.writeValueAsString(results);
                         response.getWriter().write(jsonResponse);
